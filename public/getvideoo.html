@@ -1,0 +1,156 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript">
+
+        var socket = io.connect();
+
+        let people = [];
+        let myfilter = 0;
+        let myLocation = {
+          x: 0,
+          y: 0
+        }
+
+        socket.on('connect', function() {
+    				console.log("Connected");
+    			});
+
+
+       window.addEventListener('load', function(){
+
+         let video = document.getElementById('myvideo');
+         let canvas = document.getElementById('mycanvas');
+         // let img = document.getElementById('myimage')
+         let ctx = canvas.getContext('2d');
+
+
+         // Constraints - what do we want?
+         let constraints = { audio: false, video: true }
+
+         // Prompt the user for permission, get the stream
+         navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+         	/* Use the stream */
+
+	        // Attach to our video object
+  	         video.srcObject = stream;
+
+  	       // Wait for the stream to load enough to play
+  	         video.onloadedmetadata = function(e) {
+  		           video.play();
+                //
+                 draw();
+  	         };
+         })
+
+          .catch(function(err) {
+              /* Handle the error */
+             alert(err);
+            });
+
+
+
+
+            function draw(){
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            //  ctx2.drawImage(video, 0, 0, canvas2.width, canvas2.height);
+
+              let datatosend = {
+                image: canvas.toDataURL(),
+                filter: myfilter,
+                location: myLocation
+              }
+              socket.emit('sendImage', datatosend);
+
+
+              //window.requestAnimationFrame(draw);
+              window.setTimeout(draw, 500);
+            }
+
+
+
+
+
+            let huebutton = document.getElementById("huebutton");
+            huebutton.addEventListener("click", function () {
+              myfilter = 1;
+            });
+
+            let graybutton = document.getElementById("graybutton");
+            graybutton.addEventListener("click", function () {
+              myfilter = 2;
+            });
+
+            document.onkeydown = function(event) {
+              console.log(event.key)
+              if (event.key === 'a') {
+                myLocation.x -= 10;
+              }
+              if(event.key ==='d'){
+                myLocation.x += 10;
+              }
+              if(event.key ==='w'){
+                myLocation.y -= 10;
+              }
+              if(event.key ==='s'){
+                myLocation.y += 10;
+              }
+            }
+
+
+
+
+            // Receive a message
+      			socket.on('receiveImage', function(data) {
+              // let image = data.image;
+              // let id = data.id;
+              let x = data.location.x;
+              let y = data.location.y;
+
+              let img = document.getElementById(data.id);
+              if (img) {
+                console.log(data.location);
+                img.src = data.image;
+                img.style.left = x + '%';
+                img.style.top =  y + '%';
+                img.setAttribute("class", "filter" + data.filter);
+              } else {
+                let person = new Image();
+                person.setAttribute("id", data.id);
+                person.src = data.image;
+                person.style.position = 'absolute';
+                document.body.appendChild(person);
+              }
+
+
+      				// console.log("Got: " + data);
+
+              //the method below is creating a new image object everysecond and being placed in the body of page
+              // let ni = new Image();//html5 image object. adding new one onto the page
+              // ni.src = data;//attach the data to it
+              // document.body.appendChild(ni);//add it to page, this body is <body></body>below
+
+              //change the source to the new data that comes in from the socket
+      			 	// document.getElementById('myimage').src = image;
+      			});
+
+       });
+
+    </script>
+  </head>
+  <body>
+
+    <div id="buttons">
+       <input type="button" value="hue" id="huebutton">
+       <input type="button" value="gray" id="graybutton"/>
+    </div>
+
+    <video id="myvideo" width="400" height="300"></video>
+    <canvas id="mycanvas" width="400" height="300"></canvas>
+    <!-- <img src="" width="400" height="300" id="myimage"> -->
+
+
+
+  </body>
+</html>
