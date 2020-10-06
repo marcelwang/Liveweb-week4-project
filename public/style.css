@@ -1,13 +1,20 @@
 .filter1 {
-  filter: hue-rotate(90deg);
+  filter: hue-rotate(90deg) drop-shadow(8px 8px 10px gray);
   /* filter:drop-shadow(8px 8px 20px black); */
 }
 .filter2 {
-  filter:grayscale(100%);
+  filter:grayscale(100%) contrast(150%) drop-shadow(8px 8px 10px gray);
 }
 .filter3 {
-  filter:invert(100%);
+  filter:invert(100%) drop-shadow(8px 8px 10px gray);
 
+}
+.filter4{
+  filter:contrast(200%) drop-shadow(8px 8px 10px gray);
+}
+
+.filter5{
+  filter: sepia(100%) blur(2px) drop-shadow(8px 8px 10px gray);
 }
 
 #myvideo {
