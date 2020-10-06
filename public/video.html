@@ -1,10 +1,41 @@
 <html>
   <head>
+
+    <!-- BELOW are added by Rae from p5.js index.html file to enable the script to use p5.js' library  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
+    <meta charset="utf-8" />
+    <!-- ABOVE are added by Rae from p5.js index.html file to enable the script to use p5.js' library  -->
+
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript">
 
         var socket = io.connect();
+
+// BELOW from p5.js
+//Created 10.04.2020 for Live Web: Control video to move around the canvas with nose
+let video;
+let poseNet;
+let pose;
+//define user's given location.
+let userX;
+let userY;
+
+function setup(){
+  poseNet = ml5.poseNet(video, modelReady);
+  poseNet.on('pose', gotPoses);
+}
+
+function gotPoses(poses) {
+  if (poses.length > 0) {
+    pose = poses[0].pose;
+  }
+}
+// ABOVE from p5.js
+
 
         let people = [];
         let myfilter = 0;
@@ -12,6 +43,7 @@
           x: 0,
           y: 0
         }
+        let nose = pose.nose;
 
         socket.on('connect', function() {
     				console.log("Connected");
@@ -59,7 +91,10 @@
               let datatosend = {
                 image: canvas.toDataURL(),
                 filter: myfilter,
-                location: myLocation
+                location: myLocation,
+                nosex:nose.x,
+                nodey:nose.y
+
               }
               socket.emit('sendImage', datatosend);
 
@@ -81,6 +116,23 @@
             graybutton.addEventListener("click", function () {
               myfilter = 2;
             });
+
+            let invertbutton = document.getElementById("invertbutton");
+            huebutton.addEventListener("click", function () {
+              myfilter = 3;
+            });
+
+            let contrastbutton = document.getElementById("contrastbutton");
+            contrastbutton.addEventListener("click", function () {
+              myfilter = 4;
+            });
+
+            let sepiabutton = document.getElementById("sepiabutton");
+            sepiabutton.addEventListener("click", function () {
+              myfilter = 5;
+            });
+
+
 
             document.onkeydown = function(event) {
               console.log(event.key)
@@ -110,11 +162,22 @@
 
               let img = document.getElementById(data.id);
               if (img) {
-                console.log(data.location);
-                img.src = data.image;
-                img.style.left = x + '%';
-                img.style.top =  y + '%';
-                img.setAttribute("class", "filter" + data.filter);
+                if(pose){
+                  let nose = pose.nose;
+                  console.log(data.location);
+                  img.src = data.image;
+                  img.style.left = x + '%' + data.nosex;
+                  img.style.top =  y + '%' + data.nosey;
+                  img.setAttribute("class", "filter" + data.filter);
+
+                  // image(video, nose.x + userX, nose.y + userY);
+                }
+                // console.log(data.location);
+                // img.src = data.image;
+
+                // img.style.left = x + '%';
+                // img.style.top =  y + '%';
+                // img.setAttribute("class", "filter" + data.filter);
               } else {
                 let person = new Image();
                 person.setAttribute("id", data.id);
@@ -123,19 +186,38 @@
                 document.body.appendChild(person);
               }
 
+  
+      	});
 
-      				// console.log("Got: " + data);
+      });
 
-              //the method below is creating a new image object everysecond and being placed in the body of page
-              // let ni = new Image();//html5 image object. adding new one onto the page
-              // ni.src = data;//attach the data to it
-              // document.body.appendChild(ni);//add it to page, this body is <body></body>below
+    </script>
+  </head>
+  <body>
+    <!-- BELOW used to enable p5.js script to use here-->
+    <!-- <script src="sketch.js"></script> -->
+    <!-- ABOVE used to enable p5.js script to use here-->
 
-              //change the source to the new data that comes in from the socket
-      			 	// document.getElementById('myimage').src = image;
-      			});
+    <div id="buttons">
+       <input type="button" value="HEY" id="huebutton">
+       <input type="button" value="ARE" id="graybutton"/>
+       <input type="button" value="YOU" id="invertbutton"/>
+       <input type="button" value="BORING" id="contrastbutton"/>
+       <input type="button" value="?" id="sepiabutton">
+    </div>
 
-       });
+
+    <audio autoplay>
+<source src="gq.mp3" type="audio/mpeg">
+</audio>
+    <video id="myvideo" width="400" height="300"></video>
+    <canvas id="mycanvas" width="400" height="300"></canvas>
+    <!-- <img src="" width="400" height="300" id="myimage"> -->
+
+
+
+  </body>
+</html>
 
     </script>
   </head>
