@@ -38,36 +38,39 @@ var io = require('socket.io').listen(httpServer);
 // Register a callback function to run when we have an individual connection
 // This is run for each individual user that connects
 io.sockets.on('connection',
-	// We are given a websocket object in our function
-	function (socket) {
+// We are given a websocket object in our function
+function (socket) {
 
-		console.log("We have a new client: " + socket.id);
+	console.log("We have a new client: " + socket.id);
 
-		// When this user "send" from clientside javascript, we get a "message"
-		// client side: socket.send("the message");  or socket.emit('message', "the message");
-		socket.on('sendImage',
-			// Run this function when a message is sent
-			function (data) {
-				// console.log(data);
+	// When this user "send" from clientside javascript, we get a "message"
+	// client side: socket.send("the message");  or socket.emit('message', "the message");
+	socket.on('sendImage',
+		// Run this function when a message is sent
+         function (data) {
+	// console.log(data);
 
         let datatosend = {
           image: data.image,
           id: socket.id,
           filter: data.filter,
-          location: data.location
+          location: data.location,
+          nosex: data.nosex,
+          nosey: data.nosey
         }
 
-				// Call "broadcast" to send it to all clients (except sender), this is equal to
-				// socket.broadcast.emit('message', data);
-				// socket.broadcast.send(data);
+	// Call "broadcast" to send it to all clients (except sender), this is equal to
+	// socket.broadcast.emit('message', data);
+	// socket.broadcast.send(data);
 
-				// To all clients, on io.emit instead
-				io.emit('receiveImage', datatosend);
-			}
-		);
+	// To all clients, on io.emit instead
+	io.emit('receiveImage', datatosend);
+        
+	});
 
-		socket.on('disconnect', function() {
-			console.log("Client has disconnected");
-		});
-	}
+socket.on('disconnect', function() {
+	console.log("Client has disconnected");
+});
+
+}
 );
